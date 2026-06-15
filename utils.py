@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 def napravi_graf(n, bridovi):
-    """Gradi NetworkX graf od zadanog broja vrhova i liste bridova."""
+    """Gradi graf od zadanog broja vrhova i liste bridova."""
     G = nx.Graph()
     G.add_nodes_from(range(1, n + 1))
 
@@ -20,36 +20,6 @@ def napravi_graf(n, bridovi):
         G.add_edge(u, v)
 
     return G
-
-
-def ispisi_info(G):
-    """Ispisuje osnovne podatke, listu susjedstva i matricu susjedstva."""
-    n = G.number_of_nodes()
-    m = G.number_of_edges()
-
-    print("\n=== Prikaz grafa ===\n")
-    print(f"Broj vrhova : {n}")
-    print(f"Broj bridova: {m}\n")
-
-    print("Lista susjedstva:")
-    for vrh in sorted(G.nodes()):
-        susjedi = sorted(G.neighbors(vrh))
-        susjedi_str = ", ".join(map(str, susjedi)) if susjedi else "—"
-        print(f"  {vrh:>3} (stupanj {G.degree(vrh)}):  {susjedi_str}")
-
-    print("\nMatrica susjedstva:")
-    nodes = sorted(G.nodes())
-    print("    " + "  ".join(f"{j:2}" for j in nodes))
-    print("    " + "----" * n)
-    for i in nodes:
-        red = [" 1" if G.has_edge(i, j) else " 0" for j in nodes]
-        print(f"  {i:2}|" + "  ".join(red))
-
-    stupnjevi = [G.degree(v) for v in G.nodes()]
-    print(f"\nMinimalni stupanj : {min(stupnjevi)}")
-    print(f"Maksimalni stupanj: {max(stupnjevi)}")
-    print(f"Suma stupnjeva    : {sum(stupnjevi)}  (= 2 × broj bridova)")
-    print(f"Povezan           : {'Da' if nx.is_connected(G) else 'Ne'}")
 
 
 def crtaj_graf(G):
@@ -105,6 +75,7 @@ def metricka_baza(G):
             return
 
     print(f"\nMetrička baza je cijeli skup vrhova: {{{', '.join(map(str, nodes))}}}")
+
 
 def baza_povezanosti(G):
     """Pronalazi sve baze povezanosti i dimenziju povezanosti grafa."""
