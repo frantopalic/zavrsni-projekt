@@ -4,7 +4,7 @@ Projekt iz završnog praktičnog rada. Implementacija algoritma za pronalazak me
 
 ## Sadržaj
 
- - `utils.py` - funkcije (za unos grafa, visualizaciju grafa, pronalazak metričke baze i baze povezanosti)
+ - `utils.py` - funkcije (za unos grafa, vizualizaciju grafa, pronalazak metričke baze i baze povezanosti)
  - `zavrsni.ipynb` - glavni notebook s implementacijom i primjerima na konkretnim grafovima
 
 ## Instalacija
@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ## Pokretanje
 
-Otvori `zavrsni.ipynb` u Jupyter Notebooku.
+Potrebno je otvoriti `zavrsni.ipynb` u Jupyter Notebooku.
 
 ## Biblioteke
 
