@@ -1,8 +1,24 @@
 import networkx as nx
 import functools
 
+from horadam_kocke import horadam_cubes
+
 
 def metallic_cubes(n, a):
+    """
+    Konstruira metalnu kocku Pi^a_n.
+
+    Specijalni slučaj Horadamove kocke Pi^{a,b}_n za b = 1
+    (vidi horadam_cubes za opću konstrukciju i kanonsku dekompoziciju
+    iz Teorema 1).
+
+    Parametri:
+        n (int): duljina stringova/vrhova, n >= 0
+        a (int): parametar alfabeta {0, ..., a}, a >= 1
+    """
+    return horadam_cubes(n, a, 1)
+
+def metallic_cubes1(n, a):
     """
     Konstruira metalnu kocku Pi^a_n rekurzivno koristeći kanonsku dekompoziciju:
 
