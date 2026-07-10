@@ -24,4 +24,5 @@ Potrebno je otvoriti `zavrsni.ipynb` u Jupyter Notebooku.
 
 - [NetworkX](https://networkx.org/) — rad s grafovima
 - [Matplotlib](https://matplotlib.org/) — vizualizacija grafova
+- [math](https://docs.python.org/3/library/math.html) — matematičke funkcije
 - [functools](https://docs.python.org/3/library/functools.html) — memoizacija (`functools.cache`) rekurzivne konstrukcije metalnih i Horadamovih kocki
