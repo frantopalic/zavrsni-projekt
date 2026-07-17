@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import math
+import numpy as np
 
 """Svi teoremi koji se koriste su iz 
 Gottwald, K. K., & Hofmann, T. (2025). The connectivity dimension of a graph"""
@@ -47,13 +48,46 @@ def crtaj_graf(G):
     plt.show()
 
 
-def metricka_baza(G):
-    """Pronalazi sve metrcke baze i metricku dimenziju grafa.
+def _l1_matrica(nodes):
+    """Racuna matricu svih parnih L1 (Manhattan) udaljenosti izmedu vrhova
+    koji su predstavljeni kao tuple-ovi jednake duljine n oblika
+    (x1, x2, ..., xn).
+
+    Ovo vrijedi za Horadamove (i metalne) kocke: vrhovi su nizovi
+    slova iz alfabeta {0, 1, ..., a+b-1}, a graf-udaljenost izmedu dva vrha
+    u = x1...xn i v = y1...yn dokazano je jednaka
+        d(u, v) = sum_i |x_i - y_i|
+
+    Koristi se samo za grafove kod kojih je ova jednakost
+    dokazana (Horadamove/metalne kocke) — za opcenite grafove ovo ne
+    vrijedi.
+    """
+    arr = np.array(nodes, dtype=np.int64)  # oblika (V, n)
+    broj_vrhova, duljina = arr.shape
+
+    matrica = np.zeros((broj_vrhova, broj_vrhova), dtype=np.int64)
+    for i in range(duljina):
+        stupac = arr[:, i]
+        matrica += np.abs(stupac[:, None] - stupac[None, :])
+
+    return matrica
+
+
+def metricka_baza(G, brza_l1=False):
+    """Pronalazi sve metricke baze i metricku dimenziju grafa.
 
     Koristi backtracking s pruningom umjesto provjere svih kombinacija:
     skup S se gradi vrh po vrh, a grana pretrage se odbacuje (prune) cim
     postoji par vrhova koji vise ne moze biti razluceni preostalim
     (jos neiskoristenim) kandidatima.
+
+    Parametri:
+        G (nx.Graph): povezan graf ciju metricku bazu trazimo.
+        brza_l1 (bool): ako je True, umjesto BFS-a (nx.all_pairs_shortest_path_length)
+            koristi se izravna L1 (Manhattan) formula za udaljenost —
+            samo ispravno za Horadamove/metalne kocke, gdje su vrhovi
+            tuple-ovi jednake duljine. Za sve ostale
+            grafove ostaviti na False (zadano).
     """
     # Provjera je li graf povezan
     if not nx.is_connected(G):
@@ -64,15 +98,26 @@ def metricka_baza(G):
     nodes = sorted(G.nodes())
     n = len(nodes)
 
-    # Racunanje najkracih udaljenosti izmedu svih parova vrhova
-    dist = dict(nx.all_pairs_shortest_path_length(G))
-
     # Svi parovi vrhova (indeksi u listi 'nodes') koje josh treba razluciti
     svi_parovi = [(i, j) for i in range(n) for j in range(i + 1, n)]
 
-    def razlikuje(w, u, v):
-        """Provjera razlikuje li vrh w (oznaka, ne indeks) par vrhova u, v."""
-        return dist[u][w] != dist[v][w]
+    if brza_l1:
+        # Brzi put: L1 matrica + indeksno pretrazivanje (bez skupe
+        # pretvorbe V x V matrice u nested dict oznacen tuple-ovima).
+        idx_od = {v: i for i, v in enumerate(nodes)}
+        matrica = _l1_matrica(nodes)
+
+        def razlikuje(w, u, v):
+            """Provjera razlikuje li vrh w (oznaka, ne indeks) par vrhova u, v."""
+            iw = idx_od[w]
+            return matrica[idx_od[u], iw] != matrica[idx_od[v], iw]
+    else:
+        # Spori, ali opcenit put: BFS udaljenosti preko networkx.
+        dist = dict(nx.all_pairs_shortest_path_length(G))
+
+        def razlikuje(w, u, v):
+            """Provjera razlikuje li vrh w (oznaka, ne indeks) par vrhova u, v."""
+            return dist[u][w] != dist[v][w]
 
     def trazi_baze(k):
         """Trazi sve metricke generatore velicine k backtrackingom.
