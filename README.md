@@ -1,28 +1,32 @@
 # zavrsni-projekt
+Projekt iz završnog praktičnog rada. Implementacija algoritama za pronalazak metričkih baza i baza povezanosti
+neusmjerenih povezanih grafova te implementacija funkcija koje izgrađuju metalne kocke i Horadamove kocke.
 
-Projekt iz završnog praktičnog rada. Implementacija algoritma za pronalazak metričkih baza i baza povezanosti neusmjerenih povezanih grafova
-te implementacija funkcija koje izgrađuju metallic kocke i Horadam kocke.
 
 ## Sadržaj
+- `utils.py` - funkcije za unos grafa, vizualizaciju grafa, pronalazak metričke baze i baze povezanosti
+- `metalne_kocke.py` - funkcija za kreiranje metalnih kocki (poziva `horadam_kocke.py`, $b=1$)
+- `horadam_kocke.py` - funkcija za kreiranje Horadamovih kocki
+- `zavrsni.ipynb` - glavni notebook s implementacijom i primjerima na konkretnim grafovima
 
- - `utils.py` - funkcije (za unos grafa, vizualizaciju grafa, pronalazak metričke baze i baze povezanosti)
- - `metalne_kocke` - funkcija (za kreiranje metallic kocki)
- - `horadam_kocke` - funkcija (za kreiranje Horadam kocki)
- - `zavrsni.ipynb` - glavni notebook s implementacijom i primjerima na konkretnim grafovima
+## Zahtjevi
+- Python ≥ 3.9 (koristi se `functools.cache`)
 
 ## Instalacija
-
 ```bash
 pip install -r requirements.txt
 ```
 
 ## Pokretanje
-
-Potrebno je otvoriti `zavrsni.ipynb` u Jupyter Notebooku.
+1. Instalirati ovisnosti (vidi gore).
+2. Pokrenuti Jupyter i otvoriti bilježnicu:
+```bash
+   jupyter notebook zavrsni.ipynb
+```
 
 ## Biblioteke
-
 - [NetworkX](https://networkx.org/) — rad s grafovima
+- [NumPy](https://numpy.org/) — vektorizirani izračun L1 udaljenosti (`brza_l1=True`)
 - [Matplotlib](https://matplotlib.org/) — vizualizacija grafova
 - [math](https://docs.python.org/3/library/math.html) — matematičke funkcije
-- [functools](https://docs.python.org/3/library/functools.html) — memoizacija (`functools.cache`) rekurzivne konstrukcije metalnih i Horadamovih kocki
+- [functools](https://docs.python.org/3/library/functools.html) — memoizacija rekurzivne konstrukcije kocki
