@@ -5,9 +5,12 @@ neusmjerenih povezanih grafova te implementacija funkcija koje izgrađuju metaln
 
 ## Sadržaj
 - `utils.py` - funkcije za unos grafa, vizualizaciju grafa, pronalazak metričke baze i baze povezanosti
+- `utils_brute.py` - brute-force funkcije za pronalazak metričke baze i baze povezanosti
 - `metalne_kocke.py` - funkcija za kreiranje metalnih kocki (poziva `horadam_kocke.py`, $b=1$)
 - `horadam_kocke.py` - funkcija za kreiranje Horadamovih kocki
 - `zavrsni.ipynb` - glavni notebook s implementacijom i primjerima na konkretnim grafovima
+Napomena: u datoteci `utils.py` su optimizirani algoritmi dok su u datoteci `utils_brute.py` odgovarajući
+brute-force algoritmi koji služe za usporedbu.
 
 ## Zahtjevi
 - Python ≥ 3.9 (koristi se `functools.cache`)
@@ -30,3 +33,4 @@ pip install -r requirements.txt
 - [Matplotlib](https://matplotlib.org/) — vizualizacija grafova
 - [math](https://docs.python.org/3/library/math.html) — matematičke funkcije
 - [functools](https://docs.python.org/3/library/functools.html) — memoizacija rekurzivne konstrukcije kocki
+- [time](https://docs.python.org/3/library/time.html) - mjerenje vremena izvođenja
