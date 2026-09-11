@@ -1,16 +1,16 @@
-# Završni praktični projekt
+# zavrsni-projekt
 
 Projekt iz završnog praktičnog rada. Implementacija algoritama za pronalazak metričkih baza i baza povezanosti neusmjerenih povezanih grafova te implementacija funkcija za izgradnju metalnih kocki i Horadamovih kocki.
 
 ## Sadržaj
 
-* `utils.py` - optimirani algoritmi za pronalazak metričke baze i baze povezanosti, računanje potrebnih matrica i mjerenje vremena izvođenja
+* `utils.py` - optimizirani algoritmi za pronalazak metričke baze i baze povezanosti, računanje potrebnih matrica i mjerenje vremena izvođenja
 * `utils_brute.py` - brute-force algoritmi za pronalazak metričke baze i baze povezanosti
 * `metalne_kocke.py` - funkcija za izgradnju metalnih kocki
 * `horadam_kocke.py` - funkcija za izgradnju Horadamovih kocki
 * `zavrsni.ipynb` - glavni Jupyter notebook s implementacijom, primjerima i eksperimentima
 
-Optimirani algoritmi koriste povratno pretraživanje s odsijecanjem kako bi smanjili broj nepotrebno ispitanih podskupova vrhova. Brute-force algoritmi ispituju sve potrebne podskupove te se koriste prvenstveno za manje grafove i provjeru ispravnosti optimiziranih algoritama.
+Optimizirani algoritmi koriste povratno pretraživanje s odsijecanjem kako bi smanjili broj nepotrebno ispitanih podskupova vrhova. Brute-force algoritmi ispituju sve potrebne podskupove te se koriste prvenstveno za manje grafove i provjeru ispravnosti optimiziranih algoritama.
 
 ## Zahtjevi
 
@@ -66,7 +66,7 @@ U datoteci `utils_brute.py` nalaze se funkcije:
 
 Brute-force algoritmi ispituju podskupove vrhova po rastućoj kardinalnosti te pronalaze najmanji generator. Zbog eksponencijalne složenosti namijenjeni su prvenstveno manjim grafovima.
 
-Brute-force implementacije koriste se i za provjeru ispravnosti optimiranih algoritama.
+Brute-force implementacije koriste se i za provjeru ispravnosti optimiziranih algoritama.
 
 ## Mjerenje vremena izvođenja
 
