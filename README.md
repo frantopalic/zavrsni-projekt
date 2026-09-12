@@ -1,34 +1,68 @@
-# Završni praktični projekt
+# Završni praktični rad
 
-Projekt iz završnog praktičnog rada koji se bavi implementacijom algoritama za pronalazak **metričkih baza** i **baza povezanosti** neusmjerenih povezanih grafova te izgradnjom **Horadamovih** i **metalnih kocki**.
+Implementacija algoritama za određivanje metričke dimenzije i dimenzije povezanosti neusmjerenih povezanih grafova te konstrukcija Horadamovih i metalnih kocki.
 
-Implementirani su optimizirani algoritmi koji koriste povratno pretraživanje s odsijecanjem, kao i odgovarajući brute-force algoritmi koji služe za provjeru ispravnosti i usporedbu vremena izvođenja.
+## Opis projekta
 
-## Sadržaj repozitorija
+Cilj projekta je implementirati algoritme za pronalazak metričke baze i baze povezanosti grafa. Uz algoritme za određivanje navedenih dimenzija, implementirane su i funkcije za konstrukciju Horadamovih i metalnih kocki.
 
-* `utils.py` – optimizirani algoritmi za pronalazak metričke baze i baze povezanosti te funkcije za računanje potrebnih matrica i mjerenje vremena izvođenja
-* `utils_brute.py` – brute-force algoritmi za pronalazak metričke baze i baze povezanosti
-* `horadam_kocke.py` – funkcije za izgradnju Horadamovih kocki
-* `metalne_kocke.py` – funkcije za izgradnju metalnih kocki
-* `zavrsni.ipynb` – glavni Jupyter notebook s primjerima korištenja i eksperimentima
-* `requirements.txt` – popis potrebnih Python biblioteka
+Za određivanje baza implementirane su dvije vrste algoritama:
 
-## Biblioteke
+- optimizirani algoritmi koji koriste povratno pretraživanje s odsijecanjem
+- brute-force algoritmi koji ispituju podskupove vrhova rastuće kardinalnosti
 
-U projektu se koriste sljedeće biblioteke:
+Brute-force implementacije služe kao referentne implementacije za provjeru ispravnosti optimiziranih algoritama na manjim grafovima.
 
-* [NetworkX](https://networkx.org/) – rad s grafovima, računanje udaljenosti i lokalnih povezanosti te algoritmi maksimalnog toka
-* [NumPy](https://numpy.org/) – vektorizirani izračun L1 udaljenosti
-* [Matplotlib](https://matplotlib.org/) – vizualizacija grafova
-* [math](https://docs.python.org/3/library/math.html) – matematičke funkcije
-* [functools](https://docs.python.org/3/library/functools.html) – memoizacija rekurzivne konstrukcije kocki
-* [time](https://docs.python.org/3/library/time.html) – mjerenje vremena izvođenja
+Projekt je implementiran u programskom jeziku Python uz korištenje biblioteke [NetworkX](https://networkx.org/) za rad s grafovima.
+
+## Struktura projekta
+
+- `utils.py` – pomoćne funkcije za rad s grafovima, vizualizaciju te optimizirani algoritmi za pronalazak metričke baze i baze povezanosti
+- `utils_brute.py` – referentne brute-force implementacije za pronalazak metričke baze i baze povezanosti
+- `horadam_kocke.py` – funkcija za konstrukciju Horadamovih kocki
+- `metalne_kocke.py` – funkcija za konstrukciju metalnih kocki kao posebnog slučaja Horadamovih kocki
+- `zavrsni.ipynb` – glavni Jupyter notebook s primjerima korištenja i eksperimentalnim rezultatima
+- `requirements.txt` – popis potrebnih Python biblioteka
+
+> Napomena: `zavrsni.ipynb` bit će dodan nakon izrade eksperimentalnog dijela projekta.
+
+## Zahtjevi
+
+Za pokretanje projekta potrebno je imati:
+
+- Python 3.9 ili noviji
+- Jupyter Notebook ili JupyterLab
+
+Python 3.9 ili noviji potreban je zbog korištenja funkcionalnosti `functools.cache`.
 
 ## Instalacija
 
-Za pokretanje projekta potreban je Python 3.9 ili noviji.
+Preporučuje se korištenje virtualnog okruženja.
 
-Potrebne biblioteke mogu se instalirati naredbom:
+### Kloniranje repozitorija
+
+```bash
+git clone <URL_REPOZITORIJA>
+cd <NAZIV_REPOZITORIJA>
+```
+
+### Kreiranje virtualnog okruženja
+
+Na Windows sustavu:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+Na Linux/macOS sustavu:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### Instalacija potrebnih biblioteka
 
 ```bash
 pip install -r requirements.txt
@@ -36,41 +70,151 @@ pip install -r requirements.txt
 
 ## Pokretanje
 
-Projekt se koristi kroz Jupyter Notebook.
-
-Nakon instalacije potrebnih biblioteka pokrenuti Jupyter:
+Nakon instalacije potrebnih biblioteka Jupyter Notebook može se pokrenuti naredbom:
 
 ```bash
-jupyter notebook zavrsni.ipynb
+jupyter notebook
 ```
 
-Zatim otvoriti `zavrsni.ipynb` i pokretati ćelije redom.
+Nakon izrade eksperimentalnog dijela projekta potrebno je otvoriti:
 
----
+```text
+zavrsni.ipynb
+```
+
+Pojedine funkcije mogu se koristiti i izravno iz Python datoteka.
+
+# Korištene biblioteke
+
+- [NetworkX](https://networkx.org/) – rad s grafovima, računanje udaljenosti i lokalnih vršnih povezanosti
+- [NumPy](https://numpy.org/) – rad s matricama i ubrzani izračun L1 udaljenosti
+- [Matplotlib](https://matplotlib.org/) – vizualizacija grafova
+- [math](https://docs.python.org/3/library/math.html) – matematičke funkcije
+- [functools](https://docs.python.org/3/library/functools.html) – memoizacija rekurzivne konstrukcije Horadamovih kocki
+- [time](https://docs.python.org/3/library/time.html) – mjerenje vremena izvođenja
 
 # `utils.py`
 
-Datoteka `utils.py` sadrži optimizirane algoritme za određivanje metričke dimenzije i dimenzije povezanosti povezanog neusmjerenog grafa.
+Datoteka `utils.py` sadrži pomoćne funkcije za rad s grafovima te optimizirane algoritme za određivanje metričke dimenzije i dimenzije povezanosti.
 
-Za smanjenje broja ispitanih kandidata koristi se **povratno pretraživanje s odsijecanjem**.
+## `napravi_graf`
 
-## Metrička baza
+```python
+napravi_graf(n, bridovi)
+```
 
-### `metricka_baza`
+Funkcija gradi jednostavan neusmjeren graf s vrhovima označenima brojevima od `1` do `n`.
 
-Funkcija `metricka_baza` određuje metričku dimenziju grafa i pronalazi jednu metričku bazu.
+Primjer:
 
-Najprije se računaju udaljenosti između vrhova i spremaju u matricu `D`. Za Horadamove i metalne kocke može se koristiti opcija `brza_l1=True`, pri čemu se udaljenosti računaju izravno pomoću L1 udaljenosti oznaka vrhova.
+```python
+G = napravi_graf(
+    5,
+    [(1, 2), (2, 3), (3, 4), (4, 5)]
+)
+```
 
-Za svaki par vrhova unaprijed se računa vrijednost `L`, koja se koristi za određivanje kandidata koji još mogu razlikovati promatrani par vrhova.
+Funkcija provjerava valjanost bridova te preskače:
 
-Pretraživanje počinje od skupova najmanje kardinalnosti. Tijekom pretraživanja koriste se uvjeti odsijecanja kojima se odbacuju grane koje više ne mogu dovesti do valjanog generatora.
+- bridove koji sadrže vrh izvan zadanog raspona
+- petlje
+- već postojeće bridove
 
-## Dimenzija povezanosti
+## `crtaj_graf`
 
-### `matrica_lokalnih_povezanosti`
+```python
+crtaj_graf(G)
+```
 
-Funkcija `matrica_lokalnih_povezanosti` računa matricu lokalnih vršnih povezanosti `K`.
+Funkcija vizualizira zadani graf pomoću biblioteke Matplotlib.
+
+Primjer:
+
+```python
+crtaj_graf(G)
+```
+
+# Metrička dimenzija
+
+## `metricka_baza`
+
+```python
+metricka_baza(
+    G,
+    brza_l1=False,
+    ispisi=True,
+    vrati_vremena=False
+)
+```
+
+Funkcija određuje metričku dimenziju povezanog neusmjerenog grafa i vraća jednu metričku bazu.
+
+Primjer:
+
+```python
+mdim, baza = metricka_baza(G)
+```
+
+Ako je potrebno dobiti i vremena izvođenja:
+
+```python
+mdim, baza, vremena = metricka_baza(
+    G,
+    vrati_vremena=True
+)
+```
+
+Rječnik `vremena` sadrži:
+
+- `t_matrica` – vrijeme računanja matrice udaljenosti
+- `t_L` – vrijeme računanja pomoćne matrice `L`
+- `t_pretraga` – vrijeme pretraživanja
+- `t_ukupno` – ukupno vrijeme izvođenja
+- `posjeceni_cvorovi` – broj posjećenih čvorova stabla pretraživanja
+
+## Ubrzani L1 izračun
+
+Kod Horadamovih i metalnih kocki moguće je koristiti ubrzani izračun udaljenosti pomoću L1 metrike:
+
+```python
+mdim, baza = metricka_baza(
+    G,
+    brza_l1=True
+)
+```
+
+Opcija `brza_l1=True` smije se koristiti samo kada je udaljenost grafa jednaka L1 udaljenosti oznaka vrhova. U ovom projektu to vrijedi za Horadamove i metalne kocke.
+
+Kod korištenja ubrzanog izračuna udaljenosti izbjegava se računanje udaljenosti za svaki par vrhova pomoću BFS-a te se udaljenosti računaju izravno iz oznaka vrhova.
+
+## Povratno pretraživanje s odsijecanjem
+
+Optimizirani algoritam za pronalazak metričke baze koristi povratno pretraživanje s odsijecanjem.
+
+Pretraživanje se provodi za skupove rastuće kardinalnosti. Za svaki trenutačno odabrani skup provjerava se mogu li preostali kandidati još uvijek dovesti do generatora.
+
+Koriste se dva glavna pravila odsijecanja:
+
+1. mora ostati dovoljno kandidata da se skup može nadopuniti do tražene kardinalnosti
+2. svaki trenutno nerazlučen par vrhova mora imati kandidata koji ga još može razlučiti
+
+Na taj se način izbjegavaju grane stabla pretraživanja koje ne mogu dovesti do rješenja.
+
+Funkcija također broji broj posjećenih čvorova stabla pretraživanja. Taj se podatak koristi za eksperimentalnu analizu učinka odsijecanja.
+
+# Dimenzija povezanosti
+
+## `matrica_lokalnih_povezanosti`
+
+```python
+matrica_lokalnih_povezanosti(
+    G,
+    flow_func=None,
+    nodes=None
+)
+```
+
+Funkcija računa matricu lokalnih vršnih povezanosti `K`.
 
 Za različite vrhove `u` i `v` vrijedi:
 
@@ -78,151 +222,480 @@ Za različite vrhove `u` i `v` vrijedi:
 K[u,v] = κ(u,v)
 ```
 
-dok se na dijagonalu matrice postavlja vrijednost beskonačnosti.
+Na glavnoj dijagonali matrice postavlja se beskonačnost.
 
-Vrijednosti lokalnih povezanosti računaju se pomoću funkcije `nx.all_pairs_node_connectivity`, uz mogućnost odabira algoritma maksimalnog toka.
+Za računanje lokalnih vršnih povezanosti koristi se funkcija `all_pairs_node_connectivity` iz biblioteke NetworkX.
 
-### `baza_povezanosti`
+Funkciji se može proslijediti algoritam maksimalnog toka, primjerice:
 
-Funkcija `baza_povezanosti` određuje dimenziju povezanosti grafa i pronalazi bazu povezanosti.
+```python
+nx.algorithms.flow.edmonds_karp
+```
 
-Prije pretraživanja provjerava se je li graf uniformno `k`-povezan. Ako jest, rezultat se određuje izravno.
+ili:
 
-U suprotnom se računa teorijska donja ograda te se povratnim pretraživanjem ispituju potrebne veličine skupova. Pretraživanje se provodi samo za veličine od dobivene donje ograde do `n-2`.
+```python
+nx.algorithms.flow.shortest_augmenting_path
+```
 
-## Povratno pretraživanje
+## `baza_povezanosti`
 
-Za pronalazak generatora koristi se zajednička funkcija `_pronadi_generator`.
+```python
+baza_povezanosti(
+    G,
+    flow_func=None,
+    ispisi=True,
+    vrati_vremena=False
+)
+```
 
-Funkcija može raditi s:
+Funkcija određuje dimenziju povezanosti povezanog neusmjerenog grafa i vraća jednu bazu povezanosti.
 
-* matricom udaljenosti `D` kod metričke dimenzije
-* matricom lokalnih povezanosti `K` kod dimenzije povezanosti
+Primjer:
 
-Kandidat razlikuje dva vrha ako su odgovarajuće vrijednosti u njegovom stupcu različite.
+```python
+cdim, baza = baza_povezanosti(G)
+```
 
-Pretraživanje se provodi po rastućim indeksima kandidata, a pomoću odsijecanja izbjegavaju se grane stabla pretraživanja za koje nije moguće dobiti valjani generator.
+Za dobivanje vremena pojedinih faza:
 
-## Mjerenje vremena izvođenja
+```python
+cdim, baza, vremena = baza_povezanosti(
+    G,
+    vrati_vremena=True
+)
+```
 
-Implementacija omogućuje mjerenje vremena pojedinih faza algoritama i broja posjećenih čvorova stabla pretraživanja.
+Rječnik `vremena` sadrži:
 
-Za metričku dimenziju mogu se mjeriti:
+- `t_K` – vrijeme računanja matrice lokalnih povezanosti
+- `t_uniformnost` – vrijeme provjere uniformne povezanosti
+- `t_L` – vrijeme računanja pomoćne matrice `L`
+- `t_pretraga` – vrijeme povratnog pretraživanja
+- `t_nakon_K` – vrijeme potrebno nakon izračuna matrice `K`
+- `t_ukupno` – ukupno vrijeme izvođenja
+- `posjeceni_cvorovi` – broj posjećenih čvorova stabla pretraživanja
 
-* vrijeme izgradnje matrice udaljenosti `D`
-* vrijeme računanja matrice `L`
-* vrijeme pretraživanja
-* ukupan broj posjećenih čvorova stabla pretraživanja
+U slučaju kada se dimenzija povezanosti odredi izravno na temelju uniformne povezanosti, pretraživanje nije potrebno pa je broj posjećenih čvorova jednak nuli.
 
-Za dimenziju povezanosti dodatno se mogu izdvojiti:
+## Donja ograda
 
-* vrijeme računanja matrice lokalnih povezanosti `K`
-* vrijeme provjere uniformne povezanosti
-* vrijeme pretraživanja nakon izgradnje matrice `K`
-* broj posjećenih čvorova stabla pretraživanja
+Optimizirani algoritam za dimenziju povezanosti koristi teorijsku donju ogradu kako bi smanjio broj veličina skupova koje je potrebno ispitivati.
 
-## Usporedba algoritama maksimalnog toka
+Najprije se provjerava je li graf uniformno povezan. Ako jest, dimenzija povezanosti određuje se izravno.
 
-### `usporedi_flow_algoritme`
+U suprotnom se računa donja ograda na temelju broja vrhova i maksimalnog stupnja grafa. Pretraživanje se tada pokreće od dobivene donje granice.
 
-Funkcija `usporedi_flow_algoritme` služi za usporedbu algoritama maksimalnog toka koji se mogu koristiti pri računanju matrice lokalnih povezanosti `K`.
+Na taj se način smanjuje prostor pretraživanja u odnosu na potpuno ispitivanje svih podskupova.
 
-Uspoređuju se:
+# Zajednički algoritam pretraživanja
 
-* Edmonds–Karp
-* Shortest Augmenting Path
-* Preflow-Push
+Za metričku dimenziju i dimenziju povezanosti koristi se zajednička pomoćna funkcija `_pronadi_generator`.
 
-Za svaki algoritam mjeri se vrijeme računanja matrice `K` kroz više ponavljanja. Također se provjerava daju li svi algoritmi jednaku matricu lokalnih povezanosti.
+Funkcija radi nad matricom `M`, pri čemu:
 
-Ova funkcija služi za odabir algoritma maksimalnog toka koji će se koristiti u eksperimentima.
+- redci predstavljaju vrhove koje treba razlučiti
+- stupci predstavljaju moguće kandidate za bazu
+- kandidat `r` razlučuje par `(i,j)` ako vrijedi `M[i,r] != M[j,r]`
 
----
+Za dodatno smanjenje prostora pretraživanja koristi se pomoćna matrica `L`.
+
+Algoritam vraća prvu pronađenu bazu najmanje moguće kardinalnosti.
+
+Budući da baza nije nužno jedinstvena, optimizirani algoritam vraća jednu od mogućih baza.
 
 # `utils_brute.py`
 
-Datoteka `utils_brute.py` sadrži brute-force algoritme za određivanje metričke dimenzije i dimenzije povezanosti povezanog neusmjerenog grafa.
+Datoteka `utils_brute.py` sadrži referentne brute-force implementacije za određivanje metričke dimenzije i dimenzije povezanosti.
 
-Brute-force algoritmi ispituju potrebne podskupove vrhova po rastućoj kardinalnosti. Zbog eksponencijalne složenosti namijenjeni su prvenstveno manjim grafovima.
+Brute-force algoritmi namijenjeni su prvenstveno provjeri ispravnosti optimiziranih algoritama na manjim grafovima.
 
-Osim za određivanje rezultata na manjim grafovima, koriste se za **provjeru ispravnosti optimiziranih algoritama**.
+Za razliku od optimiziranih algoritama, brute-force implementacije ne koriste povratno pretraživanje niti pravila odsijecanja. Umjesto toga ispituju podskupove vrhova po rastućoj kardinalnosti.
+
+# Brute-force metrička dimenzija
 
 ## `metricka_baza_brute`
 
-Funkcija najprije računa udaljenosti između svih parova vrhova pomoću `nx.all_pairs_shortest_path_length`.
+```python
+metricka_baza_brute(
+    G,
+    ispisi=True,
+    vrati_sve_baze=False,
+    vrati_vremena=False
+)
+```
 
-Nakon toga ispituje podskupove vrhova po rastućoj kardinalnosti. Prvi pronađeni skup koji razlikuje sve parove vrhova predstavlja metričku bazu.
+Funkcija određuje metričku dimenziju potpunim pregledom podskupova vrhova.
+
+Najprije se računaju sve parne udaljenosti u grafu, a zatim se ispituju podskupovi vrhova kardinalnosti:
+
+```text
+1, 2, ..., n-1
+```
+
+Prva kardinalnost za koju postoji metrički generator predstavlja metričku dimenziju.
+
+Primjer:
+
+```python
+mdim, baza = metricka_baza_brute(G)
+```
+
+Moguće je zatražiti sve metričke baze minimalne kardinalnosti:
+
+```python
+mdim, baze = metricka_baza_brute(
+    G,
+    vrati_sve_baze=True
+)
+```
+
+Ako je uključeno mjerenje vremena:
+
+```python
+mdim, baza, vremena = metricka_baza_brute(
+    G,
+    vrati_vremena=True
+)
+```
+
+Rječnik `vremena` sadrži:
+
+- `t_udaljenosti` – vrijeme računanja udaljenosti
+- `t_pretraga` – vrijeme brute-force pretraživanja
+- `t_ukupno` – ukupno vrijeme izvođenja
+- `razmotreni_podskupovi` – broj razmotrenih podskupova
+
+Broj razmotrenih podskupova jednak je zbroju broja podskupova ispitanih za kardinalnosti od `1` do metričke dimenzije.
+
+# Brute-force dimenzija povezanosti
 
 ## `baza_povezanosti_brute`
 
-Funkcija najprije računa lokalne vršne povezanosti između svih parova vrhova pomoću `nx.all_pairs_node_connectivity`.
+```python
+baza_povezanosti_brute(
+    G,
+    flow_func=None,
+    ispisi=True,
+    vrati_sve_baze=False,
+    vrati_vremena=False
+)
+```
 
-Nakon toga ispituje podskupove vrhova po rastućoj kardinalnosti sve dok ne pronađe bazu povezanosti.
+Funkcija određuje dimenziju povezanosti potpunim pregledom podskupova vrhova.
 
-Za lokalnu povezanost vrha sa samim sobom koristi se vrijednost beskonačnosti.
+Prije pretraživanja računaju se lokalne vršne povezanosti između svih parova vrhova.
 
-## Rezultati brute-force algoritama
+Primjer:
 
-Obje brute-force funkcije mogu vratiti:
+```python
+cdim, baza = baza_povezanosti_brute(G)
+```
 
-* jednu bazu minimalne kardinalnosti ili sve takve baze
-* vrijeme početnog izračuna
-* vrijeme brute-force pretrage
-* ukupno vrijeme izvođenja
-* broj ispitanih podskupova vrhova
+Moguće je dobiti i sve baze minimalne kardinalnosti:
 
----
+```python
+cdim, baze = baza_povezanosti_brute(
+    G,
+    vrati_sve_baze=True
+)
+```
 
-# `horadam_kocke.py`
+Kod mjerenja vremena funkcija vraća:
 
-Datoteka `horadam_kocke.py` sadrži funkcije za izgradnju Horadamovih kocki.
+- `t_kappa` – vrijeme računanja lokalnih vršnih povezanosti
+- `t_pretraga` – vrijeme brute-force pretraživanja
+- `t_ukupno` – ukupno vrijeme izvođenja
+- `razmotreni_podskupovi` – broj razmotrenih podskupova
 
-Horadamove kocke koriste se kao jedna od glavnih klasa grafova na kojima se ispituju implementirani algoritmi za metričku dimenziju i dimenziju povezanosti.
+# Uloga brute-force algoritama
 
----
+Brute-force algoritmi imaju eksponencijalni rast broja podskupova koje je potrebno ispitati pa nisu namijenjeni velikim grafovima.
 
-# `metalne_kocke.py`
+U ovom projektu koriste se kao referentne implementacije za provjeru optimiziranih algoritama na manjim grafovima.
 
-Datoteka `metalne_kocke.py` sadrži funkcije za izgradnju metalnih kocki.
+Dobivene vrijednosti metričke dimenzije i dimenzije povezanosti uspoređuju se s rezultatima optimiziranih algoritama.
 
-Metalne kocke koriste se za testiranje implementiranih algoritama i usporedbu dobivenih rezultata.
+Očekuje se da optimizirani i brute-force algoritam daju istu vrijednost dimenzije.
 
----
+Dobivene baze ne moraju biti jednake jer graf može imati više različitih baza iste minimalne kardinalnosti.
 
-# `zavrsni.ipynb`
+# Horadamove kocke
 
-Datoteka `zavrsni.ipynb` glavni je Jupyter notebook projekta.
+## `horadam_kocke.py`
 
-Notebook sadrži primjere:
+Datoteka `horadam_kocke.py` sadrži funkciju:
 
-* izgradnje Horadamovih kocki
-* izgradnje metalnih kocki
-* određivanja metričkih baza
-* određivanja baza povezanosti
-* korištenja optimiziranih algoritama
-* korištenja brute-force algoritama
-* provjere jednakosti rezultata optimiziranih i brute-force algoritama
-* mjerenja vremena izvođenja
-* usporedbe algoritama maksimalnog toka
+```python
+horadam_cubes(n, a, b)
+```
 
----
+koja rekurzivno konstruira Horadamovu kocku.
 
-# Testiranje i usporedba algoritama
+Parametri funkcije su:
 
-Brute-force implementacije koriste se za provjeru ispravnosti optimiziranih algoritama na manjim grafovima.
+- `n` – duljina riječi
+- `a` – prvi Horadamov parametar
+- `b` – drugi Horadamov parametar
 
-Kod usporedbe rezultata provjerava se jednakost dobivene **metričke dimenzije** i **dimenzije povezanosti**. Same baze ne moraju biti jednake jer graf može imati više baza iste minimalne kardinalnosti.
+Funkcija vraća graf tipa:
 
-Za manje Horadamove kocke uspoređuju se i vremena izvođenja brute-force i optimiziranih algoritama kako bi se pokazao utjecaj povratnog pretraživanja i odsijecanja na broj ispitanih kandidata i vrijeme izvođenja.
+```python
+nx.Graph
+```
 
----
+čiji su vrhovi predstavljeni `n`-torkama cijelih brojeva.
 
-# Napomena
+Primjer:
 
-Implementacija je namijenjena **povezanim neusmjerenim grafovima**.
+```python
+from horadam_kocke import horadam_cubes
 
-Opciju `brza_l1=True` treba koristiti samo kada je poznato da je grafovska udaljenost jednaka L1 udaljenosti oznaka vrhova, kao kod Horadamovih i metalnih kocki.
+G = horadam_cubes(4, 2, 1)
+```
 
-Optimizirani algoritmi i dalje u najgorem slučaju imaju eksponencijalnu složenost, ali korištenje odsijecanja i teorijskih granica može znatno smanjiti prostor pretraživanja.
+Konstrukcija se temelji na rekurzivnoj definiciji Horadamovih kocki.
 
-Iako optimizirani algoritmi koriste odsijecanje i teorijske granice za smanjenje prostora pretraživanja, u najgorem slučaju i dalje imaju eksponencijalnu složenost.
+Za ubrzavanje ponovljenih rekurzivnih izračuna koristi se memoizacija pomoću `functools.cache`.
+
+# Metalne kocke
+
+## `metalne_kocke.py`
+
+Metalne kocke predstavljaju poseban slučaj Horadamovih kocki za:
+
+```text
+b = 1
+```
+
+Datoteka `metalne_kocke.py` sadrži funkciju:
+
+```python
+metallic_cubes(n, a)
+```
+
+koja interno poziva:
+
+```python
+horadam_cubes(n, a, 1)
+```
+
+Primjer:
+
+```python
+from metalne_kocke import metallic_cubes
+
+G = metallic_cubes(4, 2)
+```
+
+Na taj način metalne kocke koriste istu osnovnu implementaciju kao Horadamove kocke.
+
+# Usporedba algoritama maksimalnog toka
+
+Za potrebe eksperimentalne analize implementirana je funkcija:
+
+```python
+usporedi_flow_algoritme(G, ponavljanja=3)
+```
+
+Funkcija uspoređuje tri egzaktna algoritma maksimalnog toka:
+
+- Edmonds–Karp
+- shortest augmenting path
+- preflow-push
+
+Primjer:
+
+```python
+rezultati = usporedi_flow_algoritme(
+    G,
+    ponavljanja=3
+)
+```
+
+Za svaki algoritam mjerenje se ponavlja zadani broj puta.
+
+Funkcija vraća:
+
+- prosječno vrijeme
+- medijan vremena
+- minimalno vrijeme
+- maksimalno vrijeme
+- sva pojedinačna vremena
+
+Osim usporedbe vremena izvođenja, provjerava se i daju li svi algoritmi istu matricu lokalnih povezanosti.
+
+Ova funkcija služi isključivo za benchmark i odabir algoritma maksimalnog toka koji će se koristiti u eksperimentima. Nije dio samog algoritma za određivanje baze povezanosti.
+
+# Mjerenje vremena
+
+Za mjerenje vremena izvođenja koristi se:
+
+```python
+time.perf_counter()
+```
+
+Vrijeme se mjeri odvojeno za pojedine faze algoritama gdje je to potrebno.
+
+Kod metričke dimenzije moguće je pratiti:
+
+- računanje matrice udaljenosti
+- računanje pomoćne matrice `L`
+- povratno pretraživanje
+- ukupno vrijeme izvođenja
+
+Kod dimenzije povezanosti moguće je pratiti:
+
+- računanje matrice lokalnih povezanosti `K`
+- provjeru uniformne povezanosti
+- računanje pomoćne matrice `L`
+- povratno pretraživanje
+- vrijeme nakon izračuna matrice `K`
+- ukupno vrijeme izvođenja
+
+Za optimizirane algoritme bilježi se i broj posjećenih čvorova stabla pretraživanja.
+
+Za brute-force algoritme bilježi se broj razmotrenih podskupova.
+
+U eksperimentalnom dijelu mjerenja se ponavljaju više puta, a za prikaz rezultata koriste se odgovarajuće statistike, poput prosječnog ili medijalnog vremena.
+
+# Eksperimentalna analiza
+
+Eksperimentalna analiza provodi se na Horadamovim kockama različitih parametara i veličina.
+
+Ciljevi eksperimentalne analize su:
+
+1. provjeriti ispravnost optimiziranih algoritama
+2. usporediti optimizirane algoritme s brute-force implementacijama
+3. analizirati vrijeme izvođenja algoritama
+4. analizirati broj posjećenih čvorova stabla pretraživanja
+5. pokazati utjecaj odsijecanja na smanjenje prostora pretraživanja
+6. usporediti različite algoritme maksimalnog toka
+7. odrediti najprikladniji algoritam maksimalnog toka za računanje matrice lokalnih povezanosti
+
+Na manjim Horadamovim kockama rezultati optimiziranih algoritama uspoređuju se s rezultatima brute-force algoritama.
+
+Kod provjere ispravnosti uspoređuju se dobivene vrijednosti metričke dimenzije i dimenzije povezanosti. Baze ne moraju biti jednake jer može postojati više baza iste minimalne kardinalnosti.
+
+Za veće grafove koriste se optimizirani algoritmi jer potpuni pregled svih podskupova postaje računalno zahtjevan.
+
+# Primjeri korištenja
+
+## Primjer rada s proizvoljnim grafom
+
+```python
+from utils import napravi_graf, crtaj_graf, metricka_baza
+
+G = napravi_graf(
+    5,
+    [(1, 2), (2, 3), (3, 4), (4, 5)]
+)
+
+crtaj_graf(G)
+
+mdim, baza = metricka_baza(G)
+
+print("Metrička dimenzija:", mdim)
+print("Metrička baza:", baza)
+```
+
+## Primjer određivanja dimenzije povezanosti
+
+```python
+from utils import baza_povezanosti
+
+cdim, baza = baza_povezanosti(G)
+
+print("Dimenzija povezanosti:", cdim)
+print("Baza povezanosti:", baza)
+```
+
+## Primjer konstrukcije Horadamove kocke
+
+```python
+from horadam_kocke import horadam_cubes
+
+G = horadam_cubes(4, 2, 1)
+```
+
+## Primjer konstrukcije metalne kocke
+
+```python
+from metalne_kocke import metallic_cubes
+
+G = metallic_cubes(4, 2)
+```
+
+## Primjer određivanja metričke dimenzije Horadamove kocke
+
+Za Horadamove i metalne kocke može se koristiti ubrzani L1 izračun udaljenosti:
+
+```python
+from horadam_kocke import horadam_cubes
+from utils import metricka_baza
+
+G = horadam_cubes(4, 2, 1)
+
+mdim, baza = metricka_baza(
+    G,
+    brza_l1=True
+)
+
+print("Metrička dimenzija:", mdim)
+print("Metrička baza:", baza)
+```
+
+## Primjer mjerenja vremena
+
+```python
+mdim, baza, vremena = metricka_baza(
+    G,
+    brza_l1=True,
+    vrati_vremena=True
+)
+
+print("Metrička dimenzija:", mdim)
+print("Metrička baza:", baza)
+print("Vrijeme:", vremena)
+```
+
+Za dimenziju povezanosti:
+
+```python
+cdim, baza, vremena = baza_povezanosti(
+    G,
+    vrati_vremena=True
+)
+
+print("Dimenzija povezanosti:", cdim)
+print("Baza povezanosti:", baza)
+print("Vrijeme:", vremena)
+```
+
+# Napomena o implementaciji
+
+Implementirani algoritmi namijenjeni su povezanim neusmjerenim grafovima.
+
+Optimizirani algoritmi i dalje u najgorem slučaju imaju eksponencijalnu složenost zbog problema pronalaska minimalnog generatora. Međutim, povratno pretraživanje, pravila odsijecanja i korištenje teorijskih donjih ograda mogu znatno smanjiti prostor pretraživanja u odnosu na potpuni brute-force pristup.
+
+Poseban slučaj predstavlja računanje udaljenosti za Horadamove i metalne kocke. Budući da su njihovi vrhovi zapisani kao n-torke cijelih brojeva, za njih se može koristiti ubrzani L1 izračun kada je udaljenost grafa jednaka L1 udaljenosti oznaka vrhova.
+
+# Rezultati
+
+Detaljna eksperimentalna analiza rezultata bit će prikazana u Jupyter notebooku `zavrsni.ipynb`.
+
+Eksperimenti uključuju:
+
+- provjeru ispravnosti optimiziranih algoritama pomoću brute-force implementacija
+- mjerenje vremena izvođenja
+- usporedbu vremena brute-force i optimiziranih algoritama
+- analizu broja posjećenih čvorova stabla pretraživanja
+- analizu utjecaja odsijecanja
+- analizu vremena računanja matrice lokalnih povezanosti
+- usporedbu algoritama maksimalnog toka
+
+# Autor
+
+**Fran Topalić**
+
+Završni praktični rad
