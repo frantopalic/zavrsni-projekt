@@ -1,68 +1,81 @@
-import networkx as nx
-import matplotlib.pyplot as plt
 import math
+import time
+from itertools import combinations
+
+import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 
-"""Svi teoremi koji se koriste su iz 
-Gottwald, K. K., & Hofmann, T. (2025). The connectivity dimension of a graph"""
+
+"""Pomoćne funkcije za rad s metričkom dimenzijom i dimenzijom povezanosti.
+
+Za dimenziju povezanosti koriste se rezultati iz:
+K. K. Gottwald, T. Hofmann, The connectivity dimension of a graph (2025).
+"""
+
 
 def napravi_graf(n, bridovi):
-    """Gradi graf od zadanog broja vrhova i liste bridova."""
-    G = nx.Graph() # Stvara se prazan neusmjeren graf
-    G.add_nodes_from(range(1, n + 1)) # Dodaju se vrhovi oznaceni brojevima od 1 do n
+    """Gradi jednostavan neusmjeren graf s vrhovima 1, ..., n."""
+    G = nx.Graph()
+    G.add_nodes_from(range(1, n + 1))
 
-    # Prolazak kroz sve bridove koji se dodaju
     for u, v in bridovi:
-        # Provjera jesu li oba vrha unutar dopustenog raspona
         if not (1 <= u <= n and 1 <= v <= n):
-            print(f"  Preskacem brid ({u},{v}): vrhovi moraju biti između 1 i {n}.")
+            print(
+                f"Preskačem brid ({u}, {v}): vrhovi moraju biti između 1 i {n}."
+            )
             continue
-        # Brid koji spaja vrh sa samim sobom nije dopusten
         if u == v:
-            print(f"  Preskacem brid ({u},{v}): petlje nisu dopuštene.")
+            print(f"Preskačem brid ({u}, {v}): petlje nisu dopuštene.")
             continue
-        # Provjera postoji li vec taj brid
         if G.has_edge(u, v):
-            print(f"  Preskacem brid ({u},{v}): već postoji.")
+            print(f"Preskačem brid ({u}, {v}): brid već postoji.")
             continue
-        # Brid se dodaje u graf
         G.add_edge(u, v)
 
     return G
 
 
 def crtaj_graf(G):
-    """Vizualizira graf pomocu matplotlib i sprema sliku."""
-    # Racunanje pozicija vrhova algoritmom za rasporedivanje
+    """Vizualizira graf pomoću matplotliba."""
     pos = nx.spring_layout(G, seed=42)
 
     plt.figure(figsize=(7, 5))
     plt.title("Prikaz grafa", fontsize=14, fontweight="bold")
-
-    nx.draw_networkx_nodes(G, pos, node_color="#4C72B0", node_size=800) # Crtanje cvorova
-    nx.draw_networkx_labels(G, pos, font_color="white", font_size=5, font_weight="bold") # Crtanje oznaka cvorova
-    nx.draw_networkx_edges(G, pos, edge_color="#333333", width=2) # Crtanje bridova
-
+    nx.draw_networkx_nodes(G, pos, node_color="#4C72B0", node_size=800)
+    nx.draw_networkx_labels(
+        G, pos, font_color="white", font_size=5, font_weight="bold"
+    )
+    nx.draw_networkx_edges(G, pos, edge_color="#333333", width=2)
     plt.axis("off")
     plt.tight_layout()
     plt.show()
 
 
+# ---------------------------------------------------------------------------
+# METRIČKA DIMENZIJA
+# ---------------------------------------------------------------------------
+
+
 def _l1_matrica(nodes):
-    """Racuna matricu svih parnih L1 (Manhattan) udaljenosti izmedu vrhova
-    koji su predstavljeni kao tuple-ovi jednake duljine n oblika
-    (x1, x2, ..., xn).
+    """Računa matricu L1 udaljenosti za vrhove zapisane kao n-torke cijelih brojeva.
 
-    Ovo vrijedi za Horadamove (i metalne) kocke: vrhovi su nizovi
-    slova iz alfabeta {0, 1, ..., a+b-1}, a graf-udaljenost izmedu dva vrha
-    u = x1...xn i v = y1...yn dokazano je jednaka
-        d(u, v) = sum_i |x_i - y_i|
-
-    Koristi se samo za grafove kod kojih je ova jednakost
-    dokazana (Horadamove/metalne kocke) — za opcenite grafove ovo ne
-    vrijedi.
+    Ova se funkcija smije koristiti samo kada je poznato da je grafovska udaljenost
+    jednaka L1 udaljenosti oznaka vrhova, kao kod Horadamovih, specijalno metalnih kocaka.
     """
-    arr = np.array(nodes, dtype=np.int64)  # oblika (V, n)
+    if not nodes:
+        return np.empty((0, 0), dtype=np.int64)
+
+    if not all(isinstance(v, tuple) for v in nodes):
+        raise ValueError(
+            "Za L1 izračun svi vrhovi moraju biti zapisani kao tuple-ovi."
+        )
+
+    duljine = {len(v) for v in nodes}
+    if len(duljine) != 1:
+        raise ValueError("Sve n-torke cijelih brojeva moraju biti jednake duljine.")
+
+    arr = np.asarray(nodes, dtype=np.int64)
     broj_vrhova, duljina = arr.shape
 
     matrica = np.zeros((broj_vrhova, broj_vrhova), dtype=np.int64)
@@ -73,331 +86,430 @@ def _l1_matrica(nodes):
     return matrica
 
 
-def metricka_baza(G, brza_l1=False):
-    """Pronalazi sve metricke baze i metricku dimenziju grafa.
-
-    Koristi backtracking s pruningom umjesto provjere svih kombinacija:
-    skup S se gradi vrh po vrh, a grana pretrage se odbacuje (prune) cim
-    postoji par vrhova koji vise ne moze biti razluceni preostalim
-    (jos neiskoristenim) kandidatima.
-
-    Parametri:
-        G (nx.Graph): povezan graf ciju metricku bazu trazimo.
-        brza_l1 (bool): ako je True, umjesto BFS-a (nx.all_pairs_shortest_path_length)
-            koristi se izravna L1 (Manhattan) formula za udaljenost —
-            samo ispravno za Horadamove/metalne kocke, gdje su vrhovi
-            tuple-ovi jednake duljine. Za sve ostale
-            grafove ostaviti na False (zadano).
-    """
-    # Provjera je li graf povezan
-    if not nx.is_connected(G):
-        print("Graf nije povezan — metrička baza nije definirana.")
-        return
-
-    # Dohvacanje i sortiranje svih cvorova grafa
-    nodes = sorted(G.nodes())
-    n = len(nodes)
-
-    # Svi parovi vrhova (indeksi u listi 'nodes') koje josh treba razluciti
-    svi_parovi = [(i, j) for i in range(n) for j in range(i + 1, n)]
-
+def _matrica_udaljenosti(G, nodes, brza_l1=False):
+    """Vraća matricu udaljenosti u poretku vrhova iz liste nodes."""
     if brza_l1:
-        # Brzi put: L1 matrica + indeksno pretrazivanje (bez skupe
-        # pretvorbe V x V matrice u nested dict oznacen tuple-ovima).
-        idx_od = {v: i for i, v in enumerate(nodes)}
-        matrica = _l1_matrica(nodes)
+        return _l1_matrica(nodes)
 
-        def razlikuje(w, u, v):
-            """Provjera razlikuje li vrh w (oznaka, ne indeks) par vrhova u, v."""
-            iw = idx_od[w]
-            return matrica[idx_od[u], iw] != matrica[idx_od[v], iw]
-    else:
-        # Spori, ali opcenit put: BFS udaljenosti preko networkx.
-        dist = dict(nx.all_pairs_shortest_path_length(G))
-
-        def razlikuje(w, u, v):
-            """Provjera razlikuje li vrh w (oznaka, ne indeks) par vrhova u, v."""
-            return dist[u][w] != dist[v][w]
-
-    def trazi_baze(k):
-        """Trazi sve metricke generatore velicine k backtrackingom.
-
-        Vraca listu pronadenih baza (svaka kao lista oznaka vrhova),
-        ili praznu listu ako generator velicine k ne postoji.
-        """
-        baze = []
-        odabrano = []  # trenutno odabrani vrhovi (indeksi u 'nodes')
-
-        def backtrack(start_idx, nerazluceni):
-            """start_idx: od kojeg indeksa u 'nodes' birati sljedeci vrh
-            (osigurava rastuci poredak pa nema duplikata).
-            nerazluceni: skup parova (i,j) koje odabrani vrhovi jos ne razlikuju.
-            """
-            # Bazni slucaj: odabrali smo k vrhova
-            if len(odabrano) == k:
-                if not nerazluceni:
-                    baze.append([nodes[i] for i in odabrano])
-                return
-
-            # PRUNING 1: nema dovoljno preostalih kandidata da popunimo S
-            preostalo_mjesta = k - len(odabrano)
-            preostalo_kandidata = n - start_idx
-            if preostalo_kandidata < preostalo_mjesta:
-                return
-
-            # Isprobavanje sljedeceg vrha za dodati u S
-            for idx in range(start_idx, n):
-                w = nodes[idx]
-
-                # Azuriranje skupa nerazlucenih parova nakon dodavanja w
-                novi_nerazluceni = set()
-                for (i, j) in nerazluceni:
-                    if razlikuje(w, nodes[i], nodes[j]):
-                        continue  # w razlikuje ovaj par, vise ne smeta
-                    novi_nerazluceni.add((i, j))
-
-                odabrano.append(idx)
-
-                # PRUNING 2: provjeravamo mozemo li preostalim (neiskoristenim)
-                # vrhovima jos razluciti sve sto je u novi_nerazluceni;
-                # ako za neki nerazluceni par nijedan preostali vrh ne pomaze,
-                # grana je beskorisna pa ju odmah odbacujemo
-                preostali_kandidati = nodes[idx + 1:]
-                moguce = True
-                for (i, j) in novi_nerazluceni:
-                    u, v = nodes[i], nodes[j]
-                    if not any(razlikuje(x, u, v) for x in preostali_kandidati):
-                        moguce = False
-                        break
-
-                if moguce:
-                    backtrack(idx + 1, novi_nerazluceni)
-
-                odabrano.pop()
-
-        backtrack(0, set(svi_parovi))
-        return baze
-
-    # Isprobavaju se sve velicine generatora k = 1, 2, 3, ...
-    # Prva velicina k za koju backtracking pronade generatore je
-    # metricka dimenzija, a ti generatori su baze
-    for k in range(1, n):
-        baze = trazi_baze(k)
-        if baze:
-            print(f"\n=== Metrička baza ===\n")
-            print(f"Metrička dimenzija : {k}")
-            print(f"Broj baza          : {len(baze)}")
-            print(f"\nSve metrčke baze:")
-            for i, baza in enumerate(baze, 1):
-                print(f"  Baza {i}: {{{', '.join(map(str, baza))}}}")
-            return
-
-    # Ako niti jedan podskup nije metricki generator, baza je cijeli skup vrhova
-    print(f"\nMetrička baza je cijeli skup vrhova: {{{', '.join(map(str, nodes))}}}")
-
-
-def _kappa_val(kappa, t, u):
-    """Vraca povezanost izmedu vrhova t i u iz gotovog kappa rjecnika.
-    Ako su t i u isti, vraca beskonacno."""
-    if t == u:
-        return math.inf
-    return kappa[t][u]
-
-
-def _trazi_baze_backtrack(G, nodes, n, kappa, k):
-    """Trazi sve generatore povezanosti velicine k backtrackingom
-
-    Vraca listu pronadenih baza (svaka kao lista oznaka vrhova),
-    ili praznu listu ako generator velicine k ne postoji.
-    """
-    def razlikuje(t, u, v):
-        return _kappa_val(kappa, t, u) != _kappa_val(kappa, t, v)
-
-    svi_parovi = [(i, j) for i in range(n) for j in range(i + 1, n)]
-    baze = []
-    odabrano = []
-
-    def backtrack(start_idx, nerazluceni):
-        if len(odabrano) == k:
-            if not nerazluceni:
-                baze.append([nodes[i] for i in odabrano])
-            return
-
-        # PRUNING 1: nema dovoljno preostalih kandidata da popunimo S
-        preostalo_mjesta = k - len(odabrano)
-        preostalo_kandidata = n - start_idx
-        if preostalo_kandidata < preostalo_mjesta:
-            return
-
-        for idx in range(start_idx, n):
-            t = nodes[idx]
-            novi_nerazluceni = set()
-            for (i, j) in nerazluceni:
-                if razlikuje(t, nodes[i], nodes[j]):
-                    continue
-                novi_nerazluceni.add((i, j))
-
-            odabrano.append(idx)
-
-            # PRUNING 2: provjeravamo mozemo li preostalim vrhovima jos
-            # razluciti sve sto je u novi_nerazluceni
-            preostali_kandidati = nodes[idx + 1:]
-            moguce = True
-            for (i, j) in novi_nerazluceni:
-                u, v = nodes[i], nodes[j]
-                if not any(razlikuje(x, u, v) for x in preostali_kandidati):
-                    moguce = False
-                    break
-
-            if moguce:
-                backtrack(idx + 1, novi_nerazluceni)
-
-            odabrano.pop()
-
-    backtrack(0, set(svi_parovi))
-    return baze
-
-
-def _backtracking_search(G, nodes, n, kappa):
-    """Trazi minimalni k i sve pripadne baze cistim backtrackingom,
-    koristeci donju ogradu iz Teorema 4 za k_start.
-
-    Poziva se samo kad G nema mostova (svi mostovi vec obradeni
-    Korolarom 15 prije poziva ove funkcije), sto znaci da je G 2-povezan
-    (b(G) = 1).
-    """
-    delta = max(d for _, d in G.degree())
-    k_start = math.ceil(math.log((n + 1) / 2, delta)) if delta >= 2 else 1
-    k_start = min(k_start, n - 1)
-
-    for k in range(k_start, n):
-        baze = _trazi_baze_backtrack(G, nodes, n, kappa, k)
-        if baze:
-            return k, baze
-
-    # Teorijski se ne bi trebalo dogoditi (cdim <= n-1 uvijek), ali za svaki slucaj:
-    return n, [nodes]
-
-
-def _provjeri_forsiranje(G_sub, baze_sub):
-    """Provjerava forsira li graf G_sub 1-reprezentaciju (Lema 13 / Korolar 16):
-    graf forsira 1-reprezentaciju ako svaka njegova baza ima vrh v izvan baze
-    s kappa(v, w) = 1 za svaki w iz baze.
-
-    Vraca listu (baza, v) parova ako G_sub forsira 1-reprezentaciju
-    (v je taj poseban vrh za svaku bazu), ili None ako ne forsira.
-    """
-    nodes_sub = list(G_sub.nodes())
-
-    # Trivijalan graf (jedan vrh) uvijek forsira (prazna reprezentacija)
-    if len(nodes_sub) == 1:
-        return [([], nodes_sub[0])]
-
-    kappa_sub = nx.all_pairs_node_connectivity(G_sub)
-    rezultat = []
-    for baza in baze_sub:
-        baza_set = set(baza)
-        v_pronaden = None
-        for v in nodes_sub:
-            if v in baza_set:
-                continue
-            if all(_kappa_val(kappa_sub, v, w) == 1 for w in baza):
-                v_pronaden = v
-                break
-        if v_pronaden is None:
-            # Ova konkretna baza nema takav vrh -> graf ne forsira 1-reprezentaciju
-            return None
-        rezultat.append((baza, v_pronaden))
-    return rezultat
-
-
-def _resolve(G):
-    """Rekurzivno racuna (cdim(G), sve_baze(G)) za povezan graf G.
-
-    Redoslijed provjera (od najjeftinije prema backtrackingu):
-      1. Bazni slucaj: graf s jednim vrhom -> cdim = 0.
-      2. Teorem 3: ako je G uniformno povezan (sve kappa vrijednosti medu
-         parovima vrhova jednake), onda cdim(G) = n - 1, bez pretrage.
-      3. Korolar 15 (specijalni slucaj Leme 13 za H = most): ako G ima
-         most, cdim(G) se racuna egzaktno iz cdim dviju manjih komponenti
-         nastalih uklanjanjem mosta, rekurzivno - bez backtrackinga na G.
-      4. Ako nista od navedenog ne vrijedi (G je 2-povezan), pribjegava se
-         cistom backtrackingu s donjim ogradama (Teorem 4).
-    """
-    nodes = sorted(G.nodes())
+    udaljenosti = dict(nx.all_pairs_shortest_path_length(G))
     n = len(nodes)
+    D = np.empty((n, n), dtype=np.int64)
+    for i, u in enumerate(nodes):
+        for j, v in enumerate(nodes):
+            D[i, j] = udaljenosti[u][v]
+    return D
 
-    # 1. Bazni slucaj
-    if n == 1:
-        return 0, [[]]
 
-    kappa = nx.all_pairs_node_connectivity(G)
+def _zadnji_razlikujuci_indeksi(M):
+    """Računa L_ij = max{q : M[i,q] != M[j,q]} za sve i < j.
 
-    # 2. Teorem 3: cdim(G) = n-1 ako i samo ako je G uniformno k-povezan
-    sve_vrijednosti = set()
+    Vraća cijelobrojnu simetričnu matricu L. Za matrice udaljenosti i matrice
+    lokalnih povezanosti korištene u ovom radu skup iz definicije L_ij uvijek
+    je neprazan.
+    """
+    n = M.shape[0]
+    L = np.full((n, n), -1, dtype=np.int64)
+
     for i in range(n):
         for j in range(i + 1, n):
-            sve_vrijednosti.add(_kappa_val(kappa, nodes[i], nodes[j]))
-    if len(sve_vrijednosti) == 1:
-        baze = [[v for v in nodes if v != x] for x in nodes]
-        return n - 1, baze
+            razliciti = np.flatnonzero(M[i] != M[j])
+            if razliciti.size == 0:
+                raise ValueError(
+                    f"Redci {i} i {j} matrice su jednaki; L_ij nije definiran."
+                )
+            zadnji = int(razliciti[-1])
+            L[i, j] = zadnji
+            L[j, i] = zadnji
 
-    # 3. Korolar 15: egzaktna dekompozicija preko mosta
-    mostovi = list(nx.bridges(G))
-    if mostovi:
-        u, v = mostovi[0]
-        G_bez_mosta = G.copy()
-        G_bez_mosta.remove_edge(u, v)
-        komponenta_u = nx.node_connected_component(G_bez_mosta, u)
-        komponenta_v = nx.node_connected_component(G_bez_mosta, v)
-        G1 = G.subgraph(komponenta_u).copy()
-        G2 = G.subgraph(komponenta_v).copy()
-
-        cdim1, baze1 = _resolve(G1)
-        cdim2, baze2 = _resolve(G2)
-
-        forsira1 = _provjeri_forsiranje(G1, baze1)
-        forsira2 = _provjeri_forsiranje(G2, baze2)
-
-        if forsira1 is not None and forsira2 is not None:
-            # Oba dijela forsiraju 1-reprezentaciju -> cdim = cdim1+cdim2+1
-            cdim = cdim1 + cdim2 + 1
-            baze = []
-            for baza1, v1 in forsira1:
-                for baza2, v2 in forsira2:
-                    baze.append(baza1 + baza2 + [v2])
-                    baze.append(baza1 + baza2 + [v1])
-        else:
-            cdim = cdim1 + cdim2
-            baze = [baza1 + baza2 for baza1 in baze1 for baza2 in baze2]
-
-        return cdim, baze
-
-    # 4. G je 2-povezan (nema mostova) -> cisti backtracking s donjim ogradama
-    return _backtracking_search(G, nodes, n, kappa)
+    return L
 
 
-def baza_povezanosti(G):
-    """Pronalazi sve baze povezanosti i dimenziju povezanosti grafa.
+def _pronadi_generator(M, L, k_start, k_kraj):
+    """Traži jedan generator najmanje veličine u zadanom rasponu.
 
-    Umjesto direktnog backtrackinga na cijelom grafu, prvo se pokusavaju
-    primijeniti jeftinije egzaktne metode:
-      - Teorem 3 (uniformna povezanost => cdim = n-1),
-      - Korolar 15 / Lema 13 (egzaktna rekurzivna dekompozicija preko
-        mostova grafa),
-    a tek ako niti jedna od njih nije primjenjiva, koristi se backtracking
-    s pruningom, uz donje ograde iz
-    Teorema 4 i Teorema 17 za pocetnu vrijednost k_start.
+    Redci matrice M predstavljaju vrhove koje treba razlučiti, a stupci
+    kandidatske vrhove. Kandidat r razlučuje par (i,j) ako M[i,r] != M[j,r].
+
+    Pretraživanje koristi dva pravila odsijecanja:
+      1. mora ostati dovoljno kandidata da se skup dopuni do veličine k;
+      2. svaki trenutačno nerazlučen par mora imati razlikujući kandidat s
+         indeksom većim od posljednjeg odabranog indeksa.
+
+    Radi analize učinka odsijecanja, funkcija također broji posjećene
+    čvorove stabla pretraživanja (svaki poziv funkcije pretrazi predstavlja
+    jedan čvor, odnosno jedno djelomično odabrano rješenje). Broj se
+    akumulira preko svih isprobanih vrijednosti k, uključujući one za koje
+    generator nije pronađen.
+
+    Povratna vrijednost
+    -------------------
+    (k, tuple_indeksa, ukupno_posjecenih_cvorova) ako je generator pronađen,
+    inače None.
     """
+    n = M.shape[0]
+    svi_parovi = tuple((i, j) for i in range(n) for j in range(i + 1, n))
+    ukupno_posjeceno = 0
+
+    for k in range(k_start, k_kraj + 1):
+        odabrano = []
+        posjeceno = 0
+
+        def pretrazi(p, nerazluceni):
+            nonlocal posjeceno
+            posjeceno += 1
+
+            if len(odabrano) == k:
+                return tuple(odabrano) if not nerazluceni else None
+
+            preostalo_mjesta = k - len(odabrano)
+            if n - p < preostalo_mjesta:
+                return None
+
+            # Posljednji dopušteni kandidat: nakon njegova odabira mora ostati
+            # dovoljno vrhova za popunjavanje skupa do veličine k.
+            zadnji_r = n - preostalo_mjesta
+
+            for r in range(p, zadnji_r + 1):
+                novi_nerazluceni = tuple(
+                    (i, j) for (i, j) in nerazluceni if M[i, r] == M[j, r]
+                )
+
+                # Ako je par i dalje nerazlučen, a njegov zadnji mogući
+                # razlikujući kandidat nije iza r, ova se grana može odbaciti.
+                if any(L[i, j] <= r for (i, j) in novi_nerazluceni):
+                    continue
+
+                odabrano.append(r)
+                rezultat = pretrazi(r + 1, novi_nerazluceni)
+                if rezultat is not None:
+                    return rezultat
+                odabrano.pop()
+
+            return None
+
+        rezultat = pretrazi(0, svi_parovi)
+        ukupno_posjeceno += posjeceno
+        if rezultat is not None:
+            return k, rezultat, ukupno_posjeceno
+
+    return None
+
+
+def metricka_baza(G, brza_l1=False, ispisi=True, vrati_vremena=False):
+    """Određuje metričku dimenziju i jednu metričku bazu povezanog grafa.
+
+    Parametri
+    ---------
+    G : nx.Graph
+        Povezan neusmjeren graf.
+    brza_l1 : bool
+        Ako je True, udaljenosti se računaju L1 formulom. To je dopušteno
+        samo za Horadamove/metalne kocke zapisane n-torkama cijelih brojeva.
+    ispisi : bool
+        Ako je True, ispisuje rezultat.
+    vrati_vremena : bool
+        Ako je True, uz rezultat vraća i rječnik s vremenima pojedinih faza
+        te s brojem posjećenih čvorova stabla pretraživanja
+        (ključ "posjeceni_cvorovi").
+
+    Povratna vrijednost
+    -------------------
+    (mdim, baza) ili (mdim, baza, vremena)
+    """
+    if G.is_directed():
+        raise ValueError("Ova implementacija očekuje neusmjeren graf.")
+    if len(G) == 0:
+        raise ValueError("Graf mora imati barem jedan vrh.")
     if not nx.is_connected(G):
-        print("Graf nije povezan — baza povezanosti nije definirana.")
-        return
+        raise ValueError("Ova implementacija metričke baze očekuje povezan graf.")
 
-    cdim, baze = _resolve(G)
+    nodes = sorted(G.nodes())
+    n = len(nodes)
 
-    print(f"\n=== Baza povezanosti ===\n")
-    print(f"Dimenzija povezanosti : {cdim}")
-    print(f"Broj baza             : {len(baze)}")
-    print(f"\nSve baze povezanosti:")
-    for i, baza in enumerate(baze, 1):
-        print(f"  Baza {i}: {{{', '.join(map(str, baza))}}}")
+    if n == 1:
+        rezultat = (0, [])
+        vremena = {
+            "t_matrica": 0.0,
+            "t_L": 0.0,
+            "t_pretraga": 0.0,
+            "t_ukupno": 0.0,
+            "posjeceni_cvorovi": 0,
+        }
+        if ispisi:
+            print("Metrička dimenzija: 0")
+            print("Metrička baza: {}")
+        return (*rezultat, vremena) if vrati_vremena else rezultat
+
+    t0 = time.perf_counter()
+    t = time.perf_counter()
+    D = _matrica_udaljenosti(G, nodes, brza_l1=brza_l1)
+    t_matrica = time.perf_counter() - t
+
+    t = time.perf_counter()
+    L = _zadnji_razlikujuci_indeksi(D)
+    t_L = time.perf_counter() - t
+
+    t = time.perf_counter()
+    pronadeno = _pronadi_generator(D, L, k_start=1, k_kraj=n - 1)
+    t_pretraga = time.perf_counter() - t
+
+    if pronadeno is None:
+        raise RuntimeError(
+            "Nije pronađena metrička baza, iako za povezan graf reda n>=2 "
+            "vrijedi mdim(G) <= n-1."
+        )
+
+    mdim, indeksi, posjeceni_cvorovi = pronadeno
+    baza = [nodes[i] for i in indeksi]
+    t_ukupno = time.perf_counter() - t0
+
+    vremena = {
+        "t_matrica": t_matrica,
+        "t_L": t_L,
+        "t_pretraga": t_pretraga,
+        "t_ukupno": t_ukupno,
+        "posjeceni_cvorovi": posjeceni_cvorovi,
+    }
+
+    if ispisi:
+        print(f"Metrička dimenzija: {mdim}")
+        print(f"Metrička baza: {{{', '.join(map(str, baza))}}}")
+
+    return (mdim, baza, vremena) if vrati_vremena else (mdim, baza)
+
+
+# ---------------------------------------------------------------------------
+# DIMENZIJA POVEZANOSTI
+# ---------------------------------------------------------------------------
+
+
+def matrica_lokalnih_povezanosti(G, flow_func=None, nodes=None):
+    """Računa matricu lokalnih vršnih povezanosti K.
+
+    Za i != j vrijedi K[i,j] = kappa(v_i,v_j), a na dijagonali se postavlja
+    beskonačno. NetworkXova funkcija all_pairs_node_connectivity ponovno
+    koristi pomoćni digraf i rezidualnu mrežu za sve parove.
+
+    Parametar flow_func može biti, primjerice,
+    nx.algorithms.flow.edmonds_karp ili
+    nx.algorithms.flow.shortest_augmenting_path.
+    Ako je None, koristi se NetworkXov zadani egzaktni algoritam.
+    """
+    if G.is_directed():
+        raise ValueError("Ova implementacija očekuje neusmjeren graf.")
+    if len(G) == 0:
+        raise ValueError("Graf mora imati barem jedan vrh.")
+    if not nx.is_connected(G):
+        raise ValueError(
+            "Ova implementacija matrice lokalnih povezanosti očekuje povezan graf."
+        )
+
+    if nodes is None:
+        nodes = sorted(G.nodes())
+    else:
+        nodes = list(nodes)
+
+    n = len(nodes)
+    K = np.full((n, n), np.inf, dtype=float)
+
+    if n == 1:
+        return K
+
+    kappa = nx.all_pairs_node_connectivity(G, nbunch=nodes, flow_func=flow_func)
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            vrijednost = kappa[nodes[i]][nodes[j]]
+            K[i, j] = vrijednost
+            K[j, i] = vrijednost
+
+    return K
+
+
+def baza_povezanosti(G, flow_func=None, ispisi=True, vrati_vremena=False):
+    """Određuje dimenziju povezanosti i jednu bazu povezanosti.
+
+    Algoritam je namijenjen povezanim grafovima, osobito Horadamovim i
+    metalnim kockama. Koristi:
+      - jednu matricu lokalnih povezanosti K,
+      - poseban slučaj uniformne povezanosti,
+      - donju ogradu preko maksimalnog stupnja,
+      - unaprijed izračunate vrijednosti L_ij,
+      - povratno pretraživanje s odsijecanjem.
+
+    Ako je vrati_vremena=True, rječnik vremena uključuje i broj posjećenih
+    čvorova stabla pretraživanja (ključ "posjeceni_cvorovi"; 0 ako je
+    cdim(G) određen izravno preko uniformne povezanosti, bez pretrage).
+
+    Povratna vrijednost
+    -------------------
+    (cdim, baza) ili (cdim, baza, vremena)
+    """
+    if G.is_directed():
+        raise ValueError("Ova implementacija očekuje neusmjeren graf.")
+    if len(G) == 0:
+        raise ValueError("Graf mora imati barem jedan vrh.")
+    if not nx.is_connected(G):
+        raise ValueError("Ova implementacija baze povezanosti očekuje povezan graf.")
+
+    nodes = sorted(G.nodes())
+    n = len(nodes)
+
+    if n == 1:
+        rezultat = (0, [])
+        vremena = {
+            "t_K": 0.0,
+            "t_uniformnost": 0.0,
+            "t_L": 0.0,
+            "t_pretraga": 0.0,
+            "t_nakon_K": 0.0,
+            "t_ukupno": 0.0,
+            "posjeceni_cvorovi": 0,
+        }
+        if ispisi:
+            print("Dimenzija povezanosti: 0")
+            print("Baza povezanosti: {}")
+        return (*rezultat, vremena) if vrati_vremena else rezultat
+
+    t0 = time.perf_counter()
+
+    t = time.perf_counter()
+    K = matrica_lokalnih_povezanosti(G, flow_func=flow_func, nodes=nodes)
+    t_K = time.perf_counter() - t
+
+    t_nakon_K_pocetak = time.perf_counter()
+
+    # Teorem: cdim(G) = n - 1 ako i samo ako je povezani graf uniformno
+    # k-povezan. Provjeravaju se samo elementi iznad dijagonale.
+    t = time.perf_counter()
+    vrijednosti_iznad_dijagonale = K[np.triu_indices(n, k=1)]
+    uniforman = np.all(vrijednosti_iznad_dijagonale == vrijednosti_iznad_dijagonale[0])
+    t_uniformnost = time.perf_counter() - t
+
+    if uniforman:
+        cdim = n - 1
+        baza = nodes[:-1]
+        t_ukupno = time.perf_counter() - t0
+        t_nakon_K = time.perf_counter() - t_nakon_K_pocetak
+        vremena = {
+            "t_K": t_K,
+            "t_uniformnost": t_uniformnost,
+            "t_L": 0.0,
+            "t_pretraga": 0.0,
+            "t_nakon_K": t_nakon_K,
+            "t_ukupno": t_ukupno,
+            "posjeceni_cvorovi": 0,
+        }
+        if ispisi:
+            print(f"Dimenzija povezanosti: {cdim}")
+            print(f"Baza povezanosti: {{{', '.join(map(str, baza))}}}")
+        return (cdim, baza, vremena) if vrati_vremena else (cdim, baza)
+
+    # Budući da graf nije uniforman, n >= 3 i Delta >= 2.
+    delta = max(dict(G.degree()).values())
+    if delta < 2:
+        raise RuntimeError("Neočekivan slučaj: neuniforman povezani graf s Delta < 2.")
+
+    # Egzaktno računanje stropa logaritma bez pogreške zaokruživanja:
+    # k0 je najmanji cijeli k za koji vrijedi 2 * Delta^k >= n + 1.
+    k0 = 0
+    potencija = 1
+    while 2 * potencija < n + 1:
+        potencija *= delta
+        k0 += 1
+    k0 = max(1, k0)
+
+    t = time.perf_counter()
+    L = _zadnji_razlikujuci_indeksi(K)
+    t_L = time.perf_counter() - t
+
+    t = time.perf_counter()
+    # Nakon što je uniformni slučaj isključen, vrijedi cdim(G) <= n - 2.
+    pronadeno = _pronadi_generator(K, L, k_start=k0, k_kraj=n - 2)
+    t_pretraga = time.perf_counter() - t
+
+    if pronadeno is None:
+        raise RuntimeError(
+            "Nije pronađena baza povezanosti u rasponu dopuštenom teorijskim "
+            "granicama. Provjerite implementaciju ili ulazni graf."
+        )
+
+    cdim, indeksi, posjeceni_cvorovi = pronadeno
+    baza = [nodes[i] for i in indeksi]
+
+    t_nakon_K = time.perf_counter() - t_nakon_K_pocetak
+    t_ukupno = time.perf_counter() - t0
+
+    vremena = {
+        "t_K": t_K,
+        "t_uniformnost": t_uniformnost,
+        "t_L": t_L,
+        "t_pretraga": t_pretraga,
+        "t_nakon_K": t_nakon_K,
+        "t_ukupno": t_ukupno,
+        "k0": k0,
+        "Delta": delta,
+        "posjeceni_cvorovi": posjeceni_cvorovi,
+    }
+
+    if ispisi:
+        print(f"Dimenzija povezanosti: {cdim}")
+        print(f"Baza povezanosti: {{{', '.join(map(str, baza))}}}")
+        print(f"Donja ograda k0: {k0}")
+
+    return (cdim, baza, vremena) if vrati_vremena else (cdim, baza)
+
+
+# ---------------------------------------------------------------------------
+# POMOĆ ZA EKSPERIMENTE: ODABIR ALGORITMA MAKSIMALNOG TOKA
+# ---------------------------------------------------------------------------
+
+
+def usporedi_flow_algoritme(G, ponavljanja=3):
+    """Uspoređuje egzaktne flow-algoritme za računanje matrice K.
+
+    Vraća rječnik s prosječnim, minimalnim i maksimalnim vremenom. Također
+    provjerava da svi algoritmi daju istu matricu lokalnih povezanosti.
+
+    Ova funkcija služi samo za benchmark i odabir postupka u eksperimentima;
+    nije dio samog algoritma za određivanje baze povezanosti.
+    """
+    if ponavljanja < 1:
+        raise ValueError("Broj ponavljanja mora biti barem 1.")
+
+    algoritmi = {
+        "edmonds_karp": nx.algorithms.flow.edmonds_karp,
+        "shortest_augmenting_path": nx.algorithms.flow.shortest_augmenting_path,
+        "preflow_push": nx.algorithms.flow.preflow_push,
+    }
+
+    rezultati = {}
+    referentna_matrica = None
+
+    for naziv, flow_func in algoritmi.items():
+        vremena = []
+        zadnja_matrica = None
+
+        for _ in range(ponavljanja):
+            t = time.perf_counter()
+            zadnja_matrica = matrica_lokalnih_povezanosti(
+                G, flow_func=flow_func
+            )
+            vremena.append(time.perf_counter() - t)
+
+        if referentna_matrica is None:
+            referentna_matrica = zadnja_matrica
+        elif not np.array_equal(referentna_matrica, zadnja_matrica):
+            raise RuntimeError(
+                f"Algoritam {naziv} nije dao istu matricu lokalnih povezanosti."
+            )
+
+        rezultati[naziv] = {
+            "prosjek": float(np.mean(vremena)),
+            "medijan": float(np.median(vremena)),
+            "minimum": float(np.min(vremena)),
+            "maksimum": float(np.max(vremena)),
+            "sva_vremena": vremena,
+        }
+
+    return rezultati
