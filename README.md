@@ -696,6 +696,8 @@ Eksperimenti uključuju:
 
 # Literatura
 
+## Za metričku dimenziju i dimenziju povezanosti
+
 G. Chartrand, L. Eroh, M. A. Johnson, O. R. Oellermann, Resolvability in
 graphs and the metric dimension of a graph, Discrete Applied Mathematics 105
 (2000), 99–113, https://doi.org/10.1016/S0166-218X(00)00198-0.
@@ -703,18 +705,25 @@ graphs and the metric dimension of a graph, Discrete Applied Mathematics 105
 K. K. Gottwald, T. Hofmann, The connectivity dimension of a graph,
 arXiv:2508.09336, 2025, https://doi.org/10.48550/arXiv.2508.09336
 
+## Za Horadamove i metalne kocke
+
+T. Došlić, L. Podrug, Metallic cubes, Discrete Mathematics 347 (2024), 113851,
+https://doi.org/10.1016/j.disc.2023.113851.
+
+L. Podrug, Horadam cubes, Ars Mathematica Contemporanea 25 (2025),
+P4.08, https://doi.org/10.26493/1855-3974.3328.2ca.
+
 # Autor
 
 **Fran Topalić**
 
 ## Mentoriica:
 
-** prof. dr. sc. Snježana Majstorović Ergotić
+**prof. dr. sc. Snježana Majstorović Ergotić**
 
 ## Komentor:
 
-** dr. sc. Luka Podrug
-Završni praktični rad
+**dr. sc. Luka Podrug**
 
 # Izjava
 
