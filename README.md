@@ -694,8 +694,32 @@ Eksperimenti uključuju:
 - analizu vremena računanja matrice lokalnih povezanosti
 - usporedbu algoritama maksimalnog toka
 
+# Literatura
+
+G. Chartrand, L. Eroh, M. A. Johnson, O. R. Oellermann, Resolvability in
+graphs and the metric dimension of a graph, Discrete Applied Mathematics 105
+(2000), 99–113, https://doi.org/10.1016/S0166-218X(00)00198-0.
+
+K. K. Gottwald, T. Hofmann, The connectivity dimension of a graph,
+arXiv:2508.09336, 2025, https://doi.org/10.48550/arXiv.2508.09336
+
 # Autor
 
 **Fran Topalić**
 
+## Mentoriica:
+
+** prof. dr. sc. Snježana Majstorović Ergotić
+
+## Komentor:
+
+** dr. sc. Luka Podrug
 Završni praktični rad
+
+# Izjava
+
+Autor je koristio ChatGPT i ClaudeAI kao pomoć pri pisanju ovog rada.
+- Generativna tehnologija korištena je za ispravke, poboljšanje stila i prikupljanje ideja.
+- Nijedan generirani sadržaj činjenične prirode ili vezan uz temu rada nije predstavljen kao
+izvorno autorovo djelo.
+- Autor preuzima potpunu odgovornost za cjelokupni sadržaj ovog rada.
