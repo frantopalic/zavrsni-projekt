@@ -717,7 +717,7 @@ P4.08, https://doi.org/10.26493/1855-3974.3328.2ca.
 
 **Fran Topalić**
 
-## Mentoriica:
+## Mentorica:
 
 **prof. dr. sc. Snježana Majstorović Ergotić**
 
