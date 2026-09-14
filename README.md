@@ -23,8 +23,7 @@ Projekt je implementiran u programskom jeziku Python uz korištenje biblioteke [
 - `metalne_kocke.py` – funkcija za konstrukciju metalnih kocki kao posebnog slučaja Horadamovih kocki
 - `zavrsni.ipynb` – glavni Jupyter notebook s primjerima korištenja i eksperimentalnim rezultatima
 - `requirements.txt` – popis potrebnih Python biblioteka
-
-> Napomena: `zavrsni.ipynb` bit će dodan nakon izrade eksperimentalnog dijela projekta.
+- `zavrsni.ipynb` - prikaz rezultata algoritama 
 
 ## Zahtjevi
 
@@ -569,9 +568,7 @@ Ciljevi eksperimentalne analize su:
 2. usporediti optimizirane algoritme s brute-force implementacijama
 3. analizirati vrijeme izvođenja algoritama
 4. analizirati broj posjećenih čvorova stabla pretraživanja
-5. pokazati utjecaj odsijecanja na smanjenje prostora pretraživanja
-6. usporediti različite algoritme maksimalnog toka
-7. odrediti najprikladniji algoritam maksimalnog toka za računanje matrice lokalnih povezanosti
+5. odrediti najprikladniji algoritam maksimalnog toka za računanje matrice lokalnih povezanosti
 
 Na manjim Horadamovim kockama rezultati optimiziranih algoritama uspoređuju se s rezultatima brute-force algoritama.
 
