@@ -1,10 +1,12 @@
 # Završni praktični rad
 
-Implementacija algoritama za određivanje metričke dimenzije i dimenzije povezanosti neusmjerenih povezanih grafova te konstrukcija Horadamovih i metalnih kocki.
+Implementacija algoritama za određivanje metričke baze i baze povezanosti uz posljedično određivanje metričke dimenzije i dimenzije povezanosti 
+neusmjerenih povezanih grafova grafa te konstrukcija Horadamovih i metalnih kocki.
 
 ## Opis projekta
 
-Cilj projekta je implementirati algoritme za pronalazak metričke baze i baze povezanosti grafa. Uz algoritme za određivanje navedenih dimenzija, implementirane su i funkcije za konstrukciju Horadamovih i metalnih kocki.
+Cilj projekta je implementirati algoritme za pronalazak metričke baze i baze povezanosti grafa. 
+Uz algoritme za određivanje navedenog, implementirane su i funkcije za konstrukciju Horadamovih i metalnih kocki.
 
 Za određivanje baza implementirane su dvije vrste algoritama:
 
