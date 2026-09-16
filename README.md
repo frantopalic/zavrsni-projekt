@@ -328,7 +328,7 @@ metricka_baza_brute(
 
 Funkcija određuje metričku dimenziju potpunim pregledom podskupova vrhova.
 
-Najprije se računaju sve parne udaljenosti u grafu, a zatim se ispituju podskupovi vrhova kardinalnosti:
+Najprije se računaju sve moguće udaljenosti u grafu, a zatim se ispituju podskupovi vrhova kardinalnosti:
 
 ```text
 1, 2, ..., n-1
