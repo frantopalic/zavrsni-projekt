@@ -201,7 +201,7 @@ Koriste se dva glavna pravila odsijecanja:
 
 Na taj se način izbjegavaju grane stabla pretraživanja koje ne mogu dovesti do rješenja.
 
-Funkcija također broji broj posjećenih čvorova stabla pretraživanja. Taj se podatak koristi za eksperimentalnu analizu učinka odsijecanja.
+ Funkcija također bilježi broj posjećenih čvorova stabla pretraživanja, koji služi kao mjera učinkovitosti primijenjenog odsijecanja. 
 
 # Dimenzija povezanosti
 
